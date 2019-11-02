@@ -15,6 +15,6 @@
 # limitations under the License.
 
 kubectl --kubeconfig=kubeconfig apply -f crd.yaml
-kubectl --kubeconfig=kubeconfig create configmap service-per-pod-hooks -n blueberry --from-file=hooks
+kubectl --kubeconfig=kubeconfig create configmap service-per-pod-hooks -n blueberry-stack --from-file=hooks
 kubectl --kubeconfig=kubeconfig apply -f service-per-pod.yaml
 kubectl --kubeconfig=kubeconfig apply -f service-per-pod.yaml
