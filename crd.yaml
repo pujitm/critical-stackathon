@@ -1,0 +1,183 @@
+# Deprecated in v1.16 in favor of apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  # this is the required format in order for rbac to work for non cluster-admins
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: crds.blueberry-stack.stackathon
+spec:
+  # this is also the required group name
+  # group name to use for REST API: /apis/<group>/<version>
+  group: blueberry-stack.stackathon
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+  # either Namespaced or Cluster - we are only support Namespaced
+  scope: Namespaced
+  names:
+    # this needs to match what is above
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: crds
+    # singular name to be used as an alias on the CLI and for display
+    singular: crd
+    # Your resource manifests use this. does not _have_ to match the singular
+    # above; rbac will allow any/all Kinds within this api group
+    # kind is normally the CamelCased singular type.
+    kind: SomethinNeat
+    # shortNames allow shorter string to match your resource on the CLI - optional
+    #shortNames:
+    #- ct
+  preserveUnknownFields: false
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          properties:
+            cronSpec:
+              type: string
+            image:
+              type: string
+            replicas:
+              type: integer
+---
+apiVersion: blueberry-stack.stackathon/v1
+kind: SomethinNeat
+metadata:
+  name: test-boi
+spec:
+  cronSpec: "* * * * *"
+  image: "something"
+  replicas: 1
+---
+# sample role creation so users can create service accounts/attach a role
+# binding to it - for deploying their custom controller in a pod
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: blueberry-stack-crd-role
+rules:
+  - apiGroups: ["blueberry-stack.stackathon"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: blueberry-stack-crd-role
+  namespace: blueberry-stack
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: blueberry-stack-crd-role
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: stack-a-thon:blueberry-stack
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loan-service
+spec:
+  selector:
+    app: vendor
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  # this is the required format in order for rbac to work for non cluster-admins
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: banks.blueberry-stack.stackathon
+spec:
+  # this is also the required group name
+  # group name to use for REST API: /apis/<group>/<version>
+  group: blueberry-stack.stackathon
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+  # either Namespaced or Cluster - we are only support Namespaced
+  scope: Namespaced
+  names:
+    # this needs to match what is above
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: banks
+    # singular name to be used as an alias on the CLI and for display
+    singular: bank
+    # Your resource manifests use this. does not _have_ to match the singular
+    # above; rbac will allow any/all Kinds within this api group
+    # kind is normally the CamelCased singular type.
+    kind: Bank
+    # shortNames allow shorter string to match your resource on the CLI - optional
+    #shortNames:
+    #- ct
+  preserveUnknownFields: false
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          properties:
+            valueBase:
+              type: integer
+            image:
+              type: string
+            replicas:
+              type: integer
+---
+apiVersion: blueberry-stack.stackathon/v1
+kind: Bank
+metadata:
+  name: central-india
+spec:
+  valueBase: 1
+  image: "babo/bank"
+  replicas: 3
+---
+apiVersion: blueberry-stack.stackathon/v1
+kind: Bank
+metadata:
+  name: new-delhi-india
+spec:
+  valueBase: 1
+  image: "babo/bank"
+  replicas: 3
+---
+apiVersion: blueberry-stack.stackathon/v1
+kind: Bank
+metadata:
+  name: banglore-india
+spec:
+  valueBase: 1
+  image: "babo/bank"
+  replicas: 3
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: DecoratorController
+metadata:
+  name: pod-name-label
+spec:
+  resources:
+    - apiVersion: v1
+      resource: pods
+      annotationSelector:
+        matchExpressions:
+          - { key: pod-name-label, operator: Exists }
+  hooks:
+    sync:
+      webhook:
+        url: https://express-hackathon.herokuapp.com/sync-pod-name-label
