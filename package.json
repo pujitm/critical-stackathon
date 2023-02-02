@@ -12,7 +12,7 @@
   "dependencies": {
     "fs": "0.0.1-security",
     "json-stream": "^1.0.0",
-    "kubernetes-client": "^8.3.4",
+    "kubernetes-client": "^8.3.7",
     "path": "^0.12.7",
     "yaml": "^1.7.2"
   }
